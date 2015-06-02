@@ -191,11 +191,47 @@ func (v *V8Context) Eval(in string) (res interface{}, err error) {
 			C.free(unsafe.Pointer(ret))
 			if len(out) >= 14 && out[:9] == "function " && out[len(out)-1] == '}' {
 				/*
-				name := fmt.Sprintf("anonymous%v", &out)
-				v.funcs[name] = func(args ...interface{}) (interface{}, error) {
-					return (Function{v, out}).Call(args...)
-				}
-				return v.funcs[name], nil
+					name := fmt.Sprintf("anonymous%v", &out)
+					v.funcs[name] = func(args ...interface{}) (interface{}, error) {
+						return (Function{v, out}).Call(args...)
+					}
+					return v.funcs[name], nil
+				*/
+				return Function{v, out}, nil
+			} else if len(out) >= 2 && out[0] == '/' && out[len(out)-1] == '/' {
+				res, err = regexp.Compile(jsregexp.Translate(out))
+			} else {
+				var buf bytes.Buffer
+				buf.Write([]byte(out))
+				dec := json.NewDecoder(&buf)
+				err = dec.Decode(&res)
+			}
+			return
+		}
+		return nil, nil
+	}
+	ret = C.v8_error(v.v8context)
+	out := C.GoString(ret)
+	C.free(unsafe.Pointer(ret))
+	return nil, errors.New(out)
+}
+
+func (v *V8Context) CallFunc(funcName string) (res interface{}, err error) {
+	ptr := C.CString(funcName)
+	defer C.free(unsafe.Pointer(ptr))
+	ret := C.v8_callfunc(v.v8context, ptr)
+
+	if ret != nil {
+		out := C.GoString(ret)
+		if out != "" {
+			C.free(unsafe.Pointer(ret))
+			if len(out) >= 14 && out[:9] == "function " && out[len(out)-1] == '}' {
+				/*
+					name := fmt.Sprintf("anonymous%v", &out)
+					v.funcs[name] = func(args ...interface{}) (interface{}, error) {
+						return (Function{v, out}).Call(args...)
+					}
+					return v.funcs[name], nil
 				*/
 				return Function{v, out}, nil
 			} else if len(out) >= 2 && out[0] == '/' && out[len(out)-1] == '/' {

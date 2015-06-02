@@ -233,6 +233,39 @@ v8_execute(void *ctx, char* source) {
   }
 }
 
+char*
+v8_callfunc(void *ctx, char* func_name){
+  v8::Locker v8Locker;
+  V8Context *context = static_cast<V8Context *>(ctx);
+  v8::HandleScope scope(v8::Isolate::GetCurrent());
+  v8::TryCatch try_catch;
+
+  v8::Context::Scope context_scope(context->context());
+  v8::Handle<v8::Object>globalObj = v8::Context::GetCurrent()->Global();
+  //获取Javascrip全局变量
+  v8::Handle<v8::Value>value = globalObj->Get(v8::String::New(func_name));
+  v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(value);
+  v8::Handle<v8::Value> args[0] = {}; 
+  v8::Handle<v8::Value> result = func->Call(globalObj, 0, args);
+  if (result.IsEmpty()) {
+      v8::ThrowException(try_catch.Exception());
+      context->err(report_exception(try_catch).c_str());
+      return NULL;
+    } else if (result->IsUndefined()) {
+      return __strdup("");
+    } else if (result->IsFunction()) {
+      v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(result);
+      v8::String::Utf8Value ret(func->ToString());
+      return __strdup(*ret);
+    } else if (result->IsRegExp()) {
+      v8::Handle<v8::RegExp> re = v8::Handle<v8::RegExp>::Cast(result);
+      v8::String::Utf8Value ret(re->ToString());
+      return __strdup(*ret);
+    } else {
+      return __strdup(to_json(result).c_str());
+    }
+  }
+
 }
 
 // vim:set et sw=2 ts=2 ai:

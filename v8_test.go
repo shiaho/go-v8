@@ -113,6 +113,39 @@ func TestEvalScriptMap(t *testing.T) {
 	}
 }
 
+func TestCallFunc(t *testing.T) {
+	ctx := NewContext()
+
+	res, err := ctx.Eval(`function a(){return 1;}; a()`)
+	if err != nil {
+		t.Fatal("Unexpected error on eval,", err)
+	}
+	if res == nil {
+		t.Fatal("Expected result from eval, received nil")
+	}
+
+	v, ok := res.(float64)
+	if !ok {
+		t.Fatal("Expected float64, but not:", res)
+	}
+	if v != 1 {
+		t.Fatal("Unexpected result from eval,", res)
+	}
+	res, err = ctx.CallFunc("a")
+
+	if err != nil {
+		t.Fatal("Unexpected error on callfunc,", err)
+	}
+
+	r, ok := res.(float64)
+	if !ok {
+		t.Fatal("Expected float64, but not:", res)
+	}
+	if r != v {
+		t.Fatal("Unexpected result from eval,", res)
+	}
+}
+
 func TestEvalScriptArray(t *testing.T) {
 	ctx := NewContext()
 
