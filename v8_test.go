@@ -327,3 +327,20 @@ func BenchmarkEvalSimple(b *testing.B) {
 		ctx.Eval(JS_SIMPLE)
 	}
 }
+
+func BenchmarkCallFuncSimple(b *testing.B) {
+	b.StopTimer()
+	ctx := NewContext()
+	b.StartTimer()
+
+	ctx.Eval(`function a(){
+		var sum;
+		for(var i=0;i<500;i++){
+			sum += i;
+		}
+	}`)
+
+	for i := 0; i < b.N; i++ {
+		ctx.CallFunc("a")
+	}
+}
