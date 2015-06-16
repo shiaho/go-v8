@@ -2,10 +2,24 @@ package main
 
 import (
 	"fmt"
+	"github.com/shiaho/get-rss"
 	"github.com/shiaho/go-v8"
+	"time"
 )
 
+func MainFunc(v8ctx *v8.V8Context) {
+	// v8ctx.Eval("console.log(testa());")
+	v8ctx.CallFunc("testa")
+	v8ctx.CallFunc("testa")
+	v8ctx.CallFunc("testa")
+	v8ctx.CallFunc("testa")
+	v8ctx.CallFunc("testa")
+	// _ = res
+	// fmt.Println(res)
+}
+
 func main() {
+	gs.PrintRss()
 	v8ctx := v8.NewContext()
 
 	// setup console.log()
@@ -40,9 +54,24 @@ func main() {
 	})
 
 	fmt.Println(v8ctx.MustEval(`
+
+	var testa = function(){
+		a ++;
+		return a;
+	} 
 	func_call(function() {
 		return "Hello " + arguments[0] + (arguments[1] - arguments[2])
 			+ ", Hello " + arguments[3]();
 	})
-	`))
+	`).(string))
+	fmt.Println(time.Now(), gs.StrRssB())
+	time.Sleep(100 * time.Millisecond)
+	for i := 1; i <= 10000; i++ {
+		MainFunc(v8ctx)
+		// v8ctx.Eval("console.log()")
+		// if i%10 == 0 {
+		fmt.Println(time.Now(), gs.StrRssB())
+		// }
+		time.Sleep(1000 * time.Millisecond)
+	}
 }

@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"sync"
 	"testing"
+
+	"github.com/shiaho/get-rss"
 )
 
 var (
@@ -339,8 +341,9 @@ func BenchmarkCallFuncSimple(b *testing.B) {
 			sum += i;
 		}
 	}`)
-
+	gs.PrintRss()
 	for i := 0; i < b.N; i++ {
 		ctx.CallFunc("a")
 	}
+	gs.PrintRss()
 }

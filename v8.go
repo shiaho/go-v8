@@ -168,9 +168,15 @@ func NewContext() *V8Context {
 	}
 	contexts[v.id] = v
 	runtime.SetFinalizer(v, func(p *V8Context) {
+		fmt.Println("*V8Context SetFinalizer")
 		C.v8_release(p.v8context)
 	})
 	return v
+}
+
+func (v *V8Context) Close() {
+	C.v8_release(v.v8context)
+	return
 }
 
 func (v *V8Context) MustEval(in string) (res interface{}) {
@@ -212,19 +218,19 @@ func (v *V8Context) Eval(in string) (res interface{}, err error) {
 	}
 	ret = C.v8_error(v.v8context)
 	out := C.GoString(ret)
+	fmt.Println(out)
 	C.free(unsafe.Pointer(ret))
 	return nil, errors.New(out)
 }
 
 func (v *V8Context) CallFunc(funcName string) (res interface{}, err error) {
-	ptr := C.CString(funcName)
+	ptr := C.CString(funcName[:])
 	defer C.free(unsafe.Pointer(ptr))
 	ret := C.v8_callfunc(v.v8context, ptr)
-
+	defer C.free(unsafe.Pointer(ret))
 	if ret != nil {
 		out := C.GoString(ret)
 		if out != "" {
-			C.free(unsafe.Pointer(ret))
 			if len(out) >= 14 && out[:9] == "function " && out[len(out)-1] == '}' {
 				/*
 					name := fmt.Sprintf("anonymous%v", &out)
@@ -246,9 +252,9 @@ func (v *V8Context) CallFunc(funcName string) (res interface{}, err error) {
 		}
 		return nil, nil
 	}
+	C.free(unsafe.Pointer(ret))
 	ret = C.v8_error(v.v8context)
 	out := C.GoString(ret)
-	C.free(unsafe.Pointer(ret))
 	return nil, errors.New(out)
 }
 

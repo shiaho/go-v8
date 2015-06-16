@@ -1,2 +1,3 @@
 *.a
 example/example
+.DS_Store

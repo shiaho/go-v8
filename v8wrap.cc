@@ -128,6 +128,7 @@ public:
   };
 
   virtual ~V8Context() {
+    printf("~V8Context\n");
     context_.Dispose();
   };
   v8::Handle<v8::Context> context() { return v8::Handle<v8::Context>::New(v8::Isolate::GetCurrent(), context_); };
@@ -160,10 +161,16 @@ v8_error(void* ctx) {
   return __strdup(context->err());
 }
 
+const char* ToCString(const v8::String::Utf8Value& value) {
+  return *value ? *value : "<string conversion failed>";
+}
+
 static std::string
 report_exception(v8::TryCatch& try_catch) {
-  v8::Handle<v8::Message> message = try_catch.Message();
+  v8::HandleScope scope(v8::Isolate::GetCurrent());
   v8::String::Utf8Value exception(try_catch.Exception());
+  const char* exception_string = ToCString(exception);
+  v8::Handle<v8::Message> message = try_catch.Message();
   std::stringstream ss;
   if (message.IsEmpty()) {
     ss << *exception << std::endl;
@@ -171,27 +178,39 @@ report_exception(v8::TryCatch& try_catch) {
     v8::String::Utf8Value filename(message->GetScriptResourceName());
     const char* filename_string = *filename;
     int linenum = message->GetLineNumber();
+    // printf("filename:%s, linenum:%d, exception_string: %s\n", filename_string, linenum, exception_string);
     ss
       << filename_string
       << ":" << linenum
-      << ": " << *exception << std::endl;
+      << ": " << exception_string << std::endl;
+    delete filename_string;
     v8::String::Utf8Value sourceline(message->GetSourceLine());
+    // const char* sourceline_string = ToCString(sourceline);
+    // printf("sourceline_string: %s\n", sourceline_string);
+    // delete sourceline_string;
     ss << *sourceline << std::endl;
     int start = message->GetStartColumn();
     for (int n = 0; n < start; n++) {
       ss << " ";
     }
+    // printf("start: %d\n", start);
     int end = message->GetEndColumn();
+    // printf("end: %d\n", end);
+    
     for (int n = start; n < end; n++) {
       ss << "^";
     }
     ss << std::endl;
     v8::String::Utf8Value stack_trace(try_catch.StackTrace());
+    // printf("stack_trace.length(): %d\n", stack_trace.length());
     if (stack_trace.length() > 0) {
       const char* stack_trace_string = *stack_trace;
       ss << stack_trace_string << std::endl;
+      delete stack_trace_string;
+      // printf("%s\n", stack_trace_string);
     }
   }
+  delete exception_string;
   return ss.str();
 }
 
@@ -241,31 +260,35 @@ v8_callfunc(void *ctx, char* func_name){
   v8::TryCatch try_catch;
 
   v8::Context::Scope context_scope(context->context());
-  v8::Handle<v8::Object>globalObj = v8::Context::GetCurrent()->Global();
+  context->err("");
+  v8::Handle<v8::Object>globalObj = context->context()->Global();
   //获取Javascrip全局变量
   v8::Handle<v8::Value>value = globalObj->Get(v8::String::New(func_name));
   v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(value);
+
   v8::Handle<v8::Value> args[0] = {}; 
   v8::Handle<v8::Value> result = func->Call(globalObj, 0, args);
-  if (result.IsEmpty()) {
-      v8::ThrowException(try_catch.Exception());
-      context->err(report_exception(try_catch).c_str());
-      return NULL;
-    } else if (result->IsUndefined()) {
-      return __strdup("");
-    } else if (result->IsFunction()) {
-      v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(result);
-      v8::String::Utf8Value ret(func->ToString());
-      return __strdup(*ret);
-    } else if (result->IsRegExp()) {
-      v8::Handle<v8::RegExp> re = v8::Handle<v8::RegExp>::Cast(result);
-      v8::String::Utf8Value ret(re->ToString());
-      return __strdup(*ret);
-    } else {
-      return __strdup(to_json(result).c_str());
-    }
-  }
+  return __strdup("");
+  // if (result.IsEmpty()) {
+  //     v8::ThrowException(try_catch.Exception());
+  //     context->err(report_exception(try_catch).c_str());
+  //     return NULL;
+  //   } else if (result->IsUndefined()) {
+  //     return __strdup("");
+  //   } else if (result->IsFunction()) {
+  //     v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(result);
+  //     v8::String::Utf8Value ret(func->ToString());
+  //     return __strdup(*ret);
+  //   } else if (result->IsRegExp()) {
+  //     v8::Handle<v8::RegExp> re = v8::Handle<v8::RegExp>::Cast(result);
+  //     v8::String::Utf8Value ret(re->ToString());
+  //     return __strdup(*ret);
+  //   } else {
+  //     return __strdup(to_json(result).c_str());
+  //   }
+}
 
+  
 }
 
 // vim:set et sw=2 ts=2 ai:
