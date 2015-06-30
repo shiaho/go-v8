@@ -116,6 +116,14 @@ class V8Context {
 public:
   V8Context() : err_("") {
     v8::Locker v8Locker;
+    
+    v8::ResourceConstraints rc;
+    rc.set_max_young_space_size(2048); //KB
+    rc.set_max_old_space_size(10); //MB
+    rc.set_max_executable_size(10); //MB
+    rc.set_stack_limit(reinterpret_cast<uint32_t*>((char*)&rc- 1024 * 400));
+    v8::SetResourceConstraints(&rc);
+
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
     v8::HandleScope scope(isolate);
     v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();

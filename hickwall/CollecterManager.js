@@ -59,12 +59,12 @@ function CollectOnce(id, res){ // api
 }
 
 /**  TEST  **/
-// CollecterAdd(1, 'console.log(collecter, config); collecter.register_resource("http",{"url": "http://www.baidu.com"}); collecter.register_collect(function(res){console.dir(res); return [config.HOST+111, res[1].a];});', {'HOST': 'SSDDS'});
-// CollecterAdd(2, 'console.log(collecter, config); collecter.register_resource("http",{"url": "http://www.ssss.com"}); collecter.register_collect(function(res){console.dir(res); return [config.HOST+0000, res[1].a];});', {'HOST': 'SSDDS'});
-// console.log(CollecterGetConfig(1));
-// console.log(CollecterGetConfig(2));
-// console.log(CollectOnce(1, ['sds', {a:12}]));
-// console.log(CollectOnce(2, ['sds', {a:2}]));
-// console.log(CollectOnce(1, ['sds', {a:3}]));
-// console.log(CollectOnce(2, ['sds', {a:4}]));
+CollecterAdd(1, 'console.log(collecter, config); collecter.register_resource("http",{"url": "http://www.baidu.com"}); collecter.register_collect(function(res){console.dir(res); return [config.HOST+111, res[1].a];});', {'HOST': 'SSDDS'});
+CollecterAdd(2, 'console.log(collecter, config); collecter.register_resource("http",{"url": "http://www.ssss.com"}); collecter.register_collect(function(res){console.dir(res); return [config.HOST+0000, res[1].a];});', {'HOST': 'SSDDS'});
+console.log(CollecterGetConfig(1));
+console.log(CollecterGetConfig(2));
+console.log(CollectOnce(1, ['sds', {a:12}]));
+console.log(CollectOnce(2, ['sds', {a:2}]));
+console.log(CollectOnce(1, ['sds', {a:3}]));
+console.log(CollectOnce(2, ['sds', {a:4}]));
 

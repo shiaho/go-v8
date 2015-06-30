@@ -11,21 +11,65 @@ func GetNewContext() *v8.V8Context {
 		return "", nil
 	})
 	v8ctx.Eval(`
-		function CollecterAdd(id, script, config){
+function Collecter(){
+	this._resources = [];
+}
 
-		}
+Collecter.prototype.register_resource = function(type, option) {
+    this._resources.push({
+        "type": type,
+        "option": option
+    });
+}
 
-		function CollectOnce(id){
 
-		}
+Collecter.prototype.get_resources = function(){
+	return this._resources;
+}
 
-		function CollecterManager(){
-			this.count = 0;
-			this.collecters = {};
-			this.collecter_ids = [];
-		}
+Collecter.prototype.register_collect = function(func){
+	this._collect_func = func;
+}
 
-		CollecterManager
+
+Collecter.prototype.run_collect = function(res){
+	return this._collect_func(res);
+}
+
+
+function CollecterManager(){
+	this.count = 0;
+	this.collecters = {};
+}
+
+CollecterManager.prototype.add_collecter = function(id, script, config) {
+	var collecter = this.collecters[id] = new Collecter();
+	this.count++;
+	var configFunc = new Function("collecter", "config", script);
+	configFunc(collecter, config);
+};
+
+CollecterManager.prototype.get_resources = function(id) {
+	return this.collecters[id].get_resources();
+};
+
+CollecterManager.prototype.run_collect = function(id, res) {
+	return this.collecters[id].run_collect(res);
+};
+
+var collecterManager = new CollecterManager();
+
+function CollecterAdd(id, script, config){ // api
+	collecterManager.add_collecter(id, script, config);
+}
+
+function CollecterGetConfig(id){ // api
+	return collecterManager.get_resources(id);
+}
+
+function CollectOnce(id, res){ // api
+	return collecterManager.run_collect(id, res);
+}
 		`)
 	// v8ctx.AddFunc("readFile", func(args ...interface{}) (interface{}, error) {
 	// 	fmt.Println("readFile")
