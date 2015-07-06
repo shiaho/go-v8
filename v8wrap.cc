@@ -261,7 +261,8 @@ v8_execute(void *ctx, char* source) {
 }
 
 char*
-v8_callfunc(void *ctx, char* func_name, int cid, char* res1, char* res2, char* res3){
+v8_callfunc(void *ctx, char* func_name, int cid, char** ress, int ress_size){
+  printf("%s\n", "v8_callfunc running");
   v8::Locker v8Locker;
   V8Context *context = static_cast<V8Context *>(ctx);
   v8::HandleScope scope(v8::Isolate::GetCurrent());
@@ -273,11 +274,13 @@ v8_callfunc(void *ctx, char* func_name, int cid, char* res1, char* res2, char* r
   //获取Javascrip全局变量
   v8::Handle<v8::Value>value = globalObj->Get(v8::String::New(func_name));
   v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(value);
-  // v8::Handle<v8::Value> resv[] = {v8::String::New(res1), v8::String::New(res2), v8::String::New(res3)}; 
-  v8::Handle<v8::Array> res = v8::Array::New(3);
-  res->Set(0, v8::String::New(res1));
-  res->Set(1, v8::String::New(res2));
-  res->Set(2, v8::String::New(res3));
+  // int ress_size = sizeof(ress) / sizeof(ress[0]);
+  // printf("%d %d %d \n", sizeof(ress), sizeof(ress[0]), sizeof(ress) / sizeof(ress[0]));
+  // int ress_size = 3;
+  v8::Handle<v8::Array> res = v8::Array::New(ress_size);
+  for (int i = 0; i < ress_size; ++i) { 
+      res->Set(i, v8::String::New(ress[i]));
+  } 
   v8::Handle<v8::Value> args[2] = {v8::Integer::New(cid), res};
   v8::Handle<v8::Value> result = func->Call(globalObj, 2, args);
   // return __strdup(""); 

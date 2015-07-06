@@ -10,7 +10,7 @@ extern void* v8_create();
 extern void v8_release(void* ctx);
 extern char* v8_execute(void* ctx, char* str);
 extern char* v8_error(void* ctx);
-extern char* v8_callfunc(void *ctx, char* func_name, int cid, char* res1, char* res2, char* res3);
+extern char* v8_callfunc(void *ctx, char* func_name, int cid, char** ress, int ress_size);
 
 typedef enum {
   v8boolean, v8number, v8string, v8function, v8regexp, v8array, v8object
