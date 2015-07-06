@@ -223,10 +223,16 @@ func (v *V8Context) Eval(in string) (res interface{}, err error) {
 	return nil, errors.New(out)
 }
 
-func (v *V8Context) CallFunc(funcName string) (res interface{}, err error) {
+func (v *V8Context) CallFunc(funcName string, cid int, res1, res2, res3 string) (res interface{}, err error) {
 	ptr := C.CString(funcName[:])
 	defer C.free(unsafe.Pointer(ptr))
-	ret := C.v8_callfunc(v.v8context, ptr)
+	cres1 := C.CString(res1[:])
+	defer C.free(unsafe.Pointer(cres1))
+	cres2 := C.CString(res2[:])
+	defer C.free(unsafe.Pointer(cres2))
+	cres3 := C.CString(res3[:])
+	defer C.free(unsafe.Pointer(cres3))
+	ret := C.v8_callfunc(v.v8context, ptr, C.int(cid), cres1, cres2, cres3)
 	defer C.free(unsafe.Pointer(ret))
 	if ret != nil {
 		out := C.GoString(ret)

@@ -261,7 +261,7 @@ v8_execute(void *ctx, char* source) {
 }
 
 char*
-v8_callfunc(void *ctx, char* func_name){
+v8_callfunc(void *ctx, char* func_name, int cid, char* res1, char* res2, char* res3){
   v8::Locker v8Locker;
   V8Context *context = static_cast<V8Context *>(ctx);
   v8::HandleScope scope(v8::Isolate::GetCurrent());
@@ -273,27 +273,31 @@ v8_callfunc(void *ctx, char* func_name){
   //获取Javascrip全局变量
   v8::Handle<v8::Value>value = globalObj->Get(v8::String::New(func_name));
   v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(value);
-
-  v8::Handle<v8::Value> args[0] = {}; 
-  v8::Handle<v8::Value> result = func->Call(globalObj, 0, args);
-  return __strdup("");
-  // if (result.IsEmpty()) {
-  //     v8::ThrowException(try_catch.Exception());
-  //     context->err(report_exception(try_catch).c_str());
-  //     return NULL;
-  //   } else if (result->IsUndefined()) {
-  //     return __strdup("");
-  //   } else if (result->IsFunction()) {
-  //     v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(result);
-  //     v8::String::Utf8Value ret(func->ToString());
-  //     return __strdup(*ret);
-  //   } else if (result->IsRegExp()) {
-  //     v8::Handle<v8::RegExp> re = v8::Handle<v8::RegExp>::Cast(result);
-  //     v8::String::Utf8Value ret(re->ToString());
-  //     return __strdup(*ret);
-  //   } else {
-  //     return __strdup(to_json(result).c_str());
-  //   }
+  // v8::Handle<v8::Value> resv[] = {v8::String::New(res1), v8::String::New(res2), v8::String::New(res3)}; 
+  v8::Handle<v8::Array> res = v8::Array::New(3);
+  res->Set(0, v8::String::New(res1));
+  res->Set(1, v8::String::New(res2));
+  res->Set(2, v8::String::New(res3));
+  v8::Handle<v8::Value> args[2] = {v8::Integer::New(cid), res};
+  v8::Handle<v8::Value> result = func->Call(globalObj, 2, args);
+  // return __strdup(""); 
+  if (result.IsEmpty()) {
+      v8::ThrowException(try_catch.Exception());
+      context->err(report_exception(try_catch).c_str());
+      return NULL;
+    } else if (result->IsUndefined()) {
+      return __strdup("");
+    } else if (result->IsFunction()) {
+      v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(result);
+      v8::String::Utf8Value ret(func->ToString());
+      return __strdup(*ret);
+    } else if (result->IsRegExp()) {
+      v8::Handle<v8::RegExp> re = v8::Handle<v8::RegExp>::Cast(result);
+      v8::String::Utf8Value ret(re->ToString());
+      return __strdup(*ret);
+    } else {
+      return __strdup(to_json(result).c_str());
+    }
 }
 
   
